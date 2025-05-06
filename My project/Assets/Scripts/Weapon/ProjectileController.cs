@@ -20,6 +20,8 @@ public class ProjectileController : MonoBehaviour
 
     private GameObject rope;
 
+    public static bool ArrowIsActive { get; private set; } = false;
+
     private void Awake()
     {
         spriteRenderer = GetComponentInChildren<SpriteRenderer>();
@@ -49,11 +51,15 @@ public class ProjectileController : MonoBehaviour
 
     private void OnTriggerEnter2D(Collider2D collision)
     {
-        if (levelCollisionLayer.value == (levelCollisionLayer.value | (1 << collision.gameObject.layer)))
+        // 1. 먼저 벽/땅/타일에 닿았는지 확인
+        if ((levelCollisionLayer.value & (1 << collision.gameObject.layer)) != 0)
         {
-            DestroyProjectile(collision.ClosestPoint(transform.position) - direction * .2f, fxOnDestory);
+            StickToWall();      // 벽에 붙고
+            return;             // 다른 처리는 무시
         }
-        else if (rangeWeaponHandler.target.value == (rangeWeaponHandler.target.value | (1 << collision.gameObject.layer)))
+
+        // 2. 적(타겟)에 닿았는지 확인
+        if ((rangeWeaponHandler.target.value & (1 << collision.gameObject.layer)) != 0)
         {
             DestroyProjectile(collision.ClosestPoint(transform.position), fxOnDestory);
         }
@@ -62,6 +68,7 @@ public class ProjectileController : MonoBehaviour
 
     public void Init(Vector2 direction, RangeWeaponHandler weaponHandler)
     {
+        ArrowIsActive = true;
         rangeWeaponHandler = weaponHandler;
 
         this.direction = direction;
@@ -77,6 +84,12 @@ public class ProjectileController : MonoBehaviour
             pivot.localRotation = Quaternion.Euler(0, 0, 0);
         _rigidbody.AddForce(this.direction.normalized * rangeWeaponHandler.Speed, ForceMode2D.Impulse);
         isReady = true;
+
+        if (rangeWeaponHandler.Controller is PlayerController player)
+        {
+            player.RegisterProjectile(this);
+        }
+
     }
 
     public void SetRope(GameObject ropeInstance)
@@ -90,6 +103,18 @@ public class ProjectileController : MonoBehaviour
             Destroy(rope);
 
         Destroy(this.gameObject);
+    }
+
+    private void StickToWall()
+    {
+        _rigidbody.velocity = Vector2.zero;
+        _rigidbody.bodyType = RigidbodyType2D.Static;
+    }
+
+    public void Recall()
+    {
+        ArrowIsActive = false;
+        Destroy(gameObject);
     }
 }
 

@@ -43,13 +43,15 @@ public class RangeWeaponHandler : WeaponHandler
 
     public override void Attack(Vector2 direction)
     {
+        if (ProjectileController.ArrowIsActive)
+            return;
+
         base.Attack(direction);
 
         float projectilesAngleSpace = multipleProjectilesAngel;
         int numberOfProjectilesPerShot = numberofProjectilesPerShot;
 
         float minAngle = -(numberOfProjectilesPerShot / 2f) * projectilesAngleSpace + 0.5f * multipleProjectilesAngel;
-
 
         for (int i = 0; i < numberOfProjectilesPerShot; i++)
         {
@@ -58,8 +60,6 @@ public class RangeWeaponHandler : WeaponHandler
             angle += randomSpread;
             CreateProjectile(Controller.LookDirection, angle);
         }
-
-        projectileManager = ProjectileManager.Instance;
     }
 
     private void CreateProjectile(Vector2 _lookDirection, float angle)

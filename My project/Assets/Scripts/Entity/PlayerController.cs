@@ -14,6 +14,8 @@ public class PlayerController : BaseController
     // 카메라 y축 오프셋
     [SerializeField] private float cameraYOffset = 1.5f;
 
+    private ProjectileController currentProjectile;
+
     protected override void Start()
     {
         base.Start();             // BaseController의 Start() 호출
@@ -24,6 +26,10 @@ public class PlayerController : BaseController
     {
         base.Update();            // 입력/회전/점프 처리
         FollowCameraSmooth();     // 카메라가 부드럽게 플레이어를 따라오게 함
+    }
+    public void RegisterProjectile(ProjectileController proj)
+    {
+        currentProjectile = proj;
     }
 
     // 입력 해석 및 lookDirection 계산
@@ -78,5 +84,13 @@ public class PlayerController : BaseController
     void OnFire(InputValue inputValue)
     {
         isAttacking = inputValue.isPressed;
+    }
+    void OnRecover(InputValue inputValue)
+    {
+        if (inputValue.isPressed && currentProjectile != null)
+        {
+            currentProjectile.Recall();
+            currentProjectile = null;
+        }
     }
 }
