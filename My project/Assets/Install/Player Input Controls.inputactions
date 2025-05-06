@@ -49,6 +49,15 @@
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": false
+                },
+                {
+                    "name": "Reel",
+                    "type": "Value",
+                    "id": "5fdc0ba1-c93b-406b-8948-79450e22fa87",
+                    "expectedControlType": "Vector2",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": true
                 }
             ],
             "bindings": [
@@ -137,6 +146,17 @@
                     "processors": "",
                     "groups": "",
                     "action": "Recover",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "c66ac2ff-2873-43a2-a8d6-0a354ab1b985",
+                    "path": "<Mouse>/scroll",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Reel",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }

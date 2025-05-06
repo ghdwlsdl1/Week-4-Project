@@ -18,9 +18,15 @@ public class ProjectileController : MonoBehaviour
 
     public bool fxOnDestory = true;
 
-    private GameObject rope;
+    private DistanceJoint2D ropeJoint;
+    private LineRenderer lineRenderer;
 
     public static bool ArrowIsActive { get; private set; } = false;
+    public float ScrollInputY { get; set; }
+
+    [SerializeField] private float reelSpeed = 1f;
+    [SerializeField] private float minRopeLength = 1f;
+    [SerializeField] private float maxRopeLength = 10f;
 
     private void Awake()
     {
@@ -32,20 +38,31 @@ public class ProjectileController : MonoBehaviour
     private void Update()
     {
         if (!isReady)
-        {
             return;
-        }
 
         currentDuration += Time.deltaTime;
 
         if (currentDuration > rangeWeaponHandler.Duration)
         {
-            DestroyProjectile(transform.position, false);
+            Recall();
         }
 
         if (_rigidbody.velocity.sqrMagnitude > 0.1f)
         {
             transform.right = _rigidbody.velocity;
+        }
+
+        // 줄 위치 갱신
+        if (lineRenderer != null && ropeJoint != null && ropeJoint.connectedBody != null)
+        {
+            lineRenderer.SetPosition(0, transform.position);
+            lineRenderer.SetPosition(1, ropeJoint.connectedBody.position);
+        }
+
+        if (ropeJoint != null && Mathf.Abs(ScrollInputY) > 0.01f)
+        {
+            float newDistance = ropeJoint.distance - ScrollInputY * reelSpeed * Time.deltaTime;
+            ropeJoint.distance = Mathf.Clamp(newDistance, minRopeLength, maxRopeLength);
         }
     }
 
@@ -54,14 +71,14 @@ public class ProjectileController : MonoBehaviour
         // 1. 먼저 벽/땅/타일에 닿았는지 확인
         if ((levelCollisionLayer.value & (1 << collision.gameObject.layer)) != 0)
         {
-            StickToWall();      // 벽에 붙고
-            return;             // 다른 처리는 무시
+            StickToWall();
+            return;
         }
 
         // 2. 적(타겟)에 닿았는지 확인
         if ((rangeWeaponHandler.target.value & (1 << collision.gameObject.layer)) != 0)
         {
-            DestroyProjectile(collision.ClosestPoint(transform.position), fxOnDestory);
+            Recall();
         }
     }
 
@@ -69,40 +86,38 @@ public class ProjectileController : MonoBehaviour
     public void Init(Vector2 direction, RangeWeaponHandler weaponHandler)
     {
         ArrowIsActive = true;
-        rangeWeaponHandler = weaponHandler;
-
         this.direction = direction;
-        currentDuration = 0;
-        transform.localScale = Vector3.one * weaponHandler.BulletSize;
-        spriteRenderer.color = weaponHandler.ProjectileColor;
-
-        transform.right = this.direction;
-
-        if (this.direction.x < 0)
-            pivot.localRotation = Quaternion.Euler(180, 0, 0);
-        else
-            pivot.localRotation = Quaternion.Euler(0, 0, 0);
-        _rigidbody.AddForce(this.direction.normalized * rangeWeaponHandler.Speed, ForceMode2D.Impulse);
+        rangeWeaponHandler = weaponHandler;
+        _rigidbody = GetComponent<Rigidbody2D>();
         isReady = true;
+
+        _rigidbody.velocity = direction.normalized * rangeWeaponHandler.Speed;
+
+        // 줄 연결
+        ropeJoint = gameObject.AddComponent<DistanceJoint2D>();
+        ropeJoint.autoConfigureDistance = false;
+        ropeJoint.enableCollision = false;
+        ropeJoint.maxDistanceOnly = true;
+
+        Rigidbody2D playerRb = weaponHandler.Controller.GetComponent<Rigidbody2D>();
+        ropeJoint.connectedBody = playerRb;
+
+        float dist = Vector2.Distance(transform.position, playerRb.position);
+        ropeJoint.distance = Mathf.Max(dist, 10f); // 최소 줄 길이
+
+        // 줄 시각화
+        lineRenderer = gameObject.AddComponent<LineRenderer>();
+        lineRenderer.positionCount = 2;
+        lineRenderer.startWidth = 0.05f;
+        lineRenderer.endWidth = 0.05f;
+        lineRenderer.material = new Material(Shader.Find("Sprites/Default"));
+        lineRenderer.startColor = Color.white;
+        lineRenderer.endColor = Color.white;
 
         if (rangeWeaponHandler.Controller is PlayerController player)
         {
             player.RegisterProjectile(this);
         }
-
-    }
-
-    public void SetRope(GameObject ropeInstance)
-    {
-        rope = ropeInstance;
-    }
-
-    private void DestroyProjectile(Vector3 position, bool createFx)
-    {
-        if (rope != null)
-            Destroy(rope);
-
-        Destroy(this.gameObject);
     }
 
     private void StickToWall()
@@ -114,12 +129,28 @@ public class ProjectileController : MonoBehaviour
     public void Recall()
     {
         ArrowIsActive = false;
-        Destroy(gameObject);
+
+        if (ropeJoint != null)
+        {
+            Destroy(ropeJoint);
+        }
+
+        if (lineRenderer != null)
+        {
+            Destroy(lineRenderer);
+        }
+
+        Destroy(this.gameObject);
     }
 
     private void OnDestroy()
     {
         ArrowIsActive = false;
+
+        if (rangeWeaponHandler.Controller is PlayerController player)
+        {
+            player.RegisterProjectile(null);
+        }
     }
 }
 

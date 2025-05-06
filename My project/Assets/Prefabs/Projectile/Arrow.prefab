@@ -207,6 +207,9 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 64
   fxOnDestory: 1
+  reelSpeed: 1
+  minRopeLength: 1
+  maxRopeLength: 10
 --- !u!1 &3135810057312660932
 GameObject:
   m_ObjectHideFlags: 0

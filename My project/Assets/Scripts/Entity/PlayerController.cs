@@ -16,6 +16,8 @@ public class PlayerController : BaseController
 
     private ProjectileController currentProjectile;
 
+    private Vector2 scrollInput;
+
     protected override void Start()
     {
         base.Start();             // BaseController의 Start() 호출
@@ -101,6 +103,16 @@ public class PlayerController : BaseController
             currentProjectile = null;
 
             isAttacking = false;
+        }
+    }
+
+    void OnReel(InputValue value)
+    {
+        scrollInput = value.Get<Vector2>();
+
+        if (currentProjectile != null)
+        {
+            currentProjectile.ScrollInputY = scrollInput.y;
         }
     }
 }
