@@ -116,5 +116,10 @@ public class ProjectileController : MonoBehaviour
         ArrowIsActive = false;
         Destroy(gameObject);
     }
+
+    private void OnDestroy()
+    {
+        ArrowIsActive = false;
+    }
 }
 
