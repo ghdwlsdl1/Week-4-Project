@@ -85,12 +85,14 @@ public class PlayerController : BaseController
     {
         isAttacking = inputValue.isPressed;
     }
-    void OnRecover(InputValue inputValue)
+    public void OnRecover(InputValue inputValue)
     {
         if (inputValue.isPressed && currentProjectile != null)
         {
             currentProjectile.Recall();
             currentProjectile = null;
+
+            isAttacking = false;
         }
     }
 }
