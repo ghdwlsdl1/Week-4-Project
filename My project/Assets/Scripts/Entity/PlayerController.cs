@@ -83,7 +83,15 @@ public class PlayerController : BaseController
     // 입력 시스템: 공격 입력 처리
     void OnFire(InputValue inputValue)
     {
-        isAttacking = inputValue.isPressed;
+        if (inputValue.isPressed)
+        {
+            isAttacking = true;
+            Invoke(nameof(ResetAttack), 0.05f); // 공격 한 번 후 자동 해제
+        }
+    }
+    void ResetAttack()
+    {
+        isAttacking = false;
     }
     public void OnRecover(InputValue inputValue)
     {
