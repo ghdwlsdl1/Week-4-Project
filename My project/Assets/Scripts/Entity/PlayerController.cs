@@ -18,10 +18,15 @@ public class PlayerController : BaseController
 
     private Vector2 scrollInput;
 
+    private bool isCameraFollowEnabled = false;
+
+    private PlayerInteraction interaction;
+
     protected override void Start()
     {
         base.Start();             // BaseController의 Start() 호출
         camera = Camera.main;     // 메인 카메라를 찾아 camera에 할당
+        interaction = GetComponent<PlayerInteraction>();
     }
 
     protected override void Update()
@@ -50,7 +55,7 @@ public class PlayerController : BaseController
     // 카메라가 플레이어를 따라오되, 부드럽게 이동하도록 처리하는 함수
     private void FollowCameraSmooth()
     {
-        if (camera == null) return;
+        if (camera == null || !isCameraFollowEnabled) return;
 
         Vector3 currentCamPos = camera.transform.position;
         Vector3 targetCamPos = new Vector3(
@@ -113,6 +118,14 @@ public class PlayerController : BaseController
         if (currentProjectile != null)
         {
             currentProjectile.ScrollInputY = scrollInput.y;
+        }
+    }
+
+    void OnInteraction(InputValue inputValue)
+    {
+        if (inputValue.isPressed)
+        {
+            interaction.TryInteract();  // PlayerInteraction에서 가져옴
         }
     }
 }
